@@ -1,5 +1,7 @@
 <?php
+session_start();
 include 'db_connection.php';
+
 
 // Query to count total users
 $result = $conn->query("SELECT COUNT(*) AS total_users FROM users");
@@ -14,17 +16,16 @@ if ($result) {
 $recentActivitiesResult = $conn->query("SELECT action, timestamp FROM activity_log ORDER BY timestamp DESC LIMIT 5");
 $recentActivities = $recentActivitiesResult ? $recentActivitiesResult->fetch_all(MYSQLI_ASSOC) : [];
 
-// Check for activity query parameter
-$activity = isset($_GET['activity']) ? $_GET['activity'] : '';
-
 $conn->close();
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimalist Dashboard</title>
+    <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
@@ -148,6 +149,7 @@ $conn->close();
         <a href="manage_attendance.php"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
         <a href="#"><i class="fas fa-chart-line"></i> Reports</a>
         <a href="#"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#"><i class="fas fa-logout"></i> Log out</a>
     </div>
 
     <div class="content">

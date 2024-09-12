@@ -190,6 +190,8 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
     <a href="manage_attendance.php" class="active"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
     <a href="#"><i class="fas fa-chart-line"></i> Reports</a>
     <a href="#"><i class="fas fa-cog"></i> Settings</a>
+
+    <a href="#"><i class="fas fa-logout"></i> Log out</a>
 </div>
 
 <div class="content">

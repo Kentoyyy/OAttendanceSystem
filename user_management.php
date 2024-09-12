@@ -277,6 +277,8 @@ $conn->close();
         <a href="user_management.php" class="active"><i class="fas fa-users"></i> User Management</a>
         <a href="manage_attendance.php"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
         <a href="reports.php"><i class="fas fa-chart-line"></i> Reports</a>
+        <a href="#"><i class="fas fa-cog"></i> Settings</a>
+        <a href="#"><i class="fas fa-logout"></i> Log out</a>
     </div>
 
     <div class="content">
