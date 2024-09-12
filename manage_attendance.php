@@ -57,6 +57,7 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Attendance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             margin: 0;
@@ -185,7 +186,7 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
     <img src="path_to_your_logo_image/logo.png" alt="Logo">
     <h2>Attendance System</h2>
     <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-    <a href="add_user.php"><i class="fas fa-user-plus"></i> Add User</a>
+    <a href="user_management.php"><i class="fas fa-user-plus"></i> User Management</a>
     <a href="manage_attendance.php" class="active"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
     <a href="#"><i class="fas fa-chart-line"></i> Reports</a>
     <a href="#"><i class="fas fa-cog"></i> Settings</a>
@@ -249,6 +250,6 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
 </div>
 
 <!-- Include Font Awesome for Icons -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+
 </body>
 </html>

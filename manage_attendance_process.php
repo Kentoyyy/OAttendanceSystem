@@ -15,6 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $date = date('Y-m-d'); // Current date
 
+    // Fetch user name
+    $userQuery = $conn->prepare("SELECT name FROM users WHERE id = ?");
+    $userQuery->bind_param("i", $user);
+    $userQuery->execute();
+    $userResult = $userQuery->get_result();
+    $userName = $userResult->num_rows > 0 ? $userResult->fetch_assoc()['name'] : 'Unknown User';
+
     // Check if there is already an attendance record for the user today
     $checkQuery = $conn->prepare("SELECT id FROM attendance WHERE user_id = ? AND date = ?");
     $checkQuery->bind_param("is", $user, $date);
@@ -26,6 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $updateQuery = $conn->prepare("UPDATE attendance SET status = ? WHERE user_id = ? AND date = ?");
         $updateQuery->bind_param("sis", $status, $user, $date);
         if ($updateQuery->execute()) {
+            // Log the activity
+            $activity = "Updated attendance for $userName with status $status";
+            $logQuery = $conn->prepare("INSERT INTO activity_log (action, timestamp) VALUES (?, NOW())");
+            $logQuery->bind_param("s", $activity);
+            $logQuery->execute();
+            
             echo 'Attendance updated successfully!';
         } else {
             echo 'Error: ' . $updateQuery->error;
@@ -36,6 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $insertQuery = $conn->prepare("INSERT INTO attendance (user_id, status, date) VALUES (?, ?, ?)");
         $insertQuery->bind_param("iss", $user, $status, $date);
         if ($insertQuery->execute()) {
+            // Log the activity
+            $activity = "Added new attendance record for $userName with status $status";
+            $logQuery = $conn->prepare("INSERT INTO activity_log (action, timestamp) VALUES (?, NOW())");
+            $logQuery->bind_param("s", $activity);
+            $logQuery->execute();
+            
             echo 'Attendance added successfully!';
         } else {
             echo 'Error: ' . $insertQuery->error;
