@@ -66,8 +66,8 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
         }
         .sidebar {
             height: 100vh;
-            width: 220px;
-            background-color: #0D7C66;
+            width: 240px;
+            background-color: #16325B;
             position: fixed;
             top: 0;
             left: 0;
@@ -103,11 +103,11 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
             margin-bottom: 5px;
         }
         .sidebar a:hover {
-            background-color: #095b4e;
-            color: #e0f0ec;
+            background-color: #55679C;
+            color: #fff;
         }
         .sidebar a.active {
-            background-color: #063e34;
+            background-color: #55679C;
         }
         .sidebar i {
             margin-right: 15px;
@@ -139,7 +139,8 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
             text-align: left;
         }
         .content th {
-            background-color: #f4f4f4;
+            background-color: #16325B;
+            color: #fff;
         }
         .form-group {
             margin-bottom: 15px;
@@ -157,19 +158,19 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
         }
         .form-group button {
             padding: 10px 15px;
-            background-color: #0D7C66;
+            background-color: #16325B;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
         .form-group button:hover {
-            background-color: #095b4e;
+            background-color: #55679C;
         }
         .download-button {
             display: inline-block;
             padding: 10px 15px;
-            background-color: #0D7C66;
+            background-color: #16325B;
             color: white;
             border: none;
             border-radius: 4px;
@@ -177,7 +178,7 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
             text-decoration: none;
         }
         .download-button:hover {
-            background-color: #095b4e;
+            background-color: #55679C;
         }
     </style>
 </head>

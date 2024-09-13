@@ -1,7 +1,6 @@
 <?php
-session_start();
 include 'db_connection.php';
-
+session_start();
 
 // Query to count total users
 $result = $conn->query("SELECT COUNT(*) AS total_users FROM users");
@@ -12,13 +11,30 @@ if ($result) {
     $total_users = 0; // Default value in case of error
 }
 
+// Query to count total attendance entries
+$attendanceResult = $conn->query("SELECT COUNT(*) AS total_attendance FROM attendance");
+if ($attendanceResult) {
+    $attendanceRow = $attendanceResult->fetch_assoc();
+    $total_attendance = $attendanceRow['total_attendance'];
+} else {
+    $total_attendance = 0; // Default value in case of error
+}
+
+// Query to group attendance by date and count total entries per day
+$attendanceSummaryResult = $conn->query("
+    SELECT date AS attendance_date, COUNT(*) AS entries 
+    FROM attendance 
+    GROUP BY date 
+    ORDER BY attendance_date DESC
+");
+$attendanceSummary = $attendanceSummaryResult ? $attendanceSummaryResult->fetch_all(MYSQLI_ASSOC) : [];
+
 // Query to get recent activities
 $recentActivitiesResult = $conn->query("SELECT action, timestamp FROM activity_log ORDER BY timestamp DESC LIMIT 5");
 $recentActivities = $recentActivitiesResult ? $recentActivitiesResult->fetch_all(MYSQLI_ASSOC) : [];
 
 $conn->close();
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -35,8 +51,8 @@ $conn->close();
         }
         .sidebar {
             height: 100vh;
-            width: 220px;
-            background-color: #0D7C66;
+            width: 240px;
+            background-color: #16325B;
             position: fixed;
             top: 0;
             left: 0;
@@ -72,11 +88,11 @@ $conn->close();
             margin-bottom: 5px;
         }
         .sidebar a:hover {
-            background-color: #095b4e;
-            color: #e0f0ec;
+            background-color: #55679C;
+            color: #fff;
         }
         .sidebar a.active {
-            background-color: #063e34;
+            background-color: #55679C;
         }
         .sidebar i {
             margin-right: 15px;
@@ -110,15 +126,12 @@ $conn->close();
         .card h3 {
             margin: 0;
             font-size: 36px;
-            color: #0D7C66;
+            color: #55679C;
         }
         .card p {
             margin: 5px 0 0;
             font-size: 14px;
             color: #777;
-        }
-        .chart {
-            margin-top: 20px;
         }
         .recent-activities {
             margin-top: 20px;
@@ -135,21 +148,60 @@ $conn->close();
         .recent-activities th {
             background-color: #f8f9fa;
         }
+        /* Attendance Summary Styles */
+.attendance-summary h2 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.summary-table thead {
+    background-color: #55679C;
+    color: white;
+}
+
+.summary-table th, .summary-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.summary-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.summary-table td {
+    font-size: 16px;
+    color: #333;
+}
+
+.summary-table th {
+    font-size: 16px;
+    text-transform: uppercase;
+}
+
+.summary-table tbody tr:hover {
+    background-color: #e9ecef;
+}
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <!-- Logo Image -->
-        <img src="path_to_your_logo_image/logo.png" alt="Logo">
-
+   <div class="sidebar">
+        <img src="images/logoattendance.png" alt="Logo">
         <h2>Attendance System</h2>
         <a href="dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
         <a href="user_management.php"><i class="fas fa-user-plus"></i> User Management</a>
         <a href="manage_attendance.php"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
         <a href="#"><i class="fas fa-chart-line"></i> Reports</a>
         <a href="#"><i class="fas fa-cog"></i> Settings</a>
-        <a href="#"><i class="fas fa-logout"></i> Log out</a>
+        <a href="#"><i class="fas fa-sign-out-alt"></i> Log out</a>
     </div>
 
     <div class="content">
@@ -163,7 +215,7 @@ $conn->close();
                 <p>Total Users</p>
             </div>
             <div class="card">
-                <h3 id="attendanceCount">N/A</h3>
+                <h3 id="attendanceCount"><?php echo $total_attendance; ?></h3>
                 <p>Total Attendance Entries</p>
             </div>
         </div>
@@ -195,9 +247,37 @@ $conn->close();
             </table>
         </div>
 
+        <div class="attendance-summary">
+    <h2>Attendance Summary by Day</h2>
+    <table class="summary-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Total Attendance Entries</th>
+            </tr>
+        </thead>
+        <tbody>
+    <?php if (empty($attendanceSummary)): ?>
+        <tr>
+            <td colspan="2">No attendance entries.</td>
+        </tr>
+    <?php else: ?>
+        <?php foreach ($attendanceSummary as $summary): ?>
+            <?php
+                // Check if the attendance_date is valid before formatting
+                $attendanceDate = strtotime($summary['attendance_date']);
+                $formattedDate = $attendanceDate ? date('F j, Y', $attendanceDate) : 'Invalid Date';
+            ?>
+            <tr>
+                <td><?php echo htmlspecialchars($formattedDate); ?></td>
+                <td><?php echo htmlspecialchars($summary['entries']); ?></td>
+            </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
+    </table>
+</div>
+
     </div>
-
-  
-
 </body>
 </html>

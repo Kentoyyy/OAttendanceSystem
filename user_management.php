@@ -88,8 +88,8 @@ $conn->close();
         }
         .sidebar {
             height: 100vh;
-            width: 220px;
-            background-color: #0D7C66;
+            width: 240px;
+            background-color: #16325B;
             position: fixed;
             top: 0;
             left: 0;
@@ -125,11 +125,11 @@ $conn->close();
             margin-bottom: 5px;
         }
         .sidebar a:hover {
-            background-color: #095b4e;
-            color: #e0f0ec;
+            background-color: #55679C;
+            color: #fff;
         }
         .sidebar a.active {
-            background-color: #063e34;
+            background-color: #55679C;
         }
         .sidebar i {
             margin-right: 15px;
@@ -164,11 +164,11 @@ $conn->close();
             transition: background-color 0.3s ease;
         }
         .tabs button.active {
-            background-color: #0D7C66;
+            background-color: #16325B;
             color: white;
         }
         .tabs button:hover {
-            background-color: #095b4e;
+            background-color: #55679C;
             color: white;
         }
         .form-group {
@@ -193,7 +193,7 @@ $conn->close();
             outline: none;
         }
         .form-group button {
-            background-color: #0D7C66;
+            background-color: #16325B;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -203,12 +203,13 @@ $conn->close();
             transition: background-color 0.3s ease;
         }
         .form-group button:hover {
-            background-color: #095b4e;
+            background-color: #55679C;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            
         }
         table, th, td {
             border: 1px solid #ddd;
@@ -218,7 +219,7 @@ $conn->close();
             text-align: left;
         }
         th {
-            background-color: #0D7C66;
+            background-color: #16325B;
             color: white;
         }
         tr:nth-child(even) {
