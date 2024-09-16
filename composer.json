@@ -2,6 +2,12 @@
     "require": {
         "ext-gd": "*",
         "ext-fileinfo": "*",
-        "phpoffice/phpspreadsheet": "^2.2"
+        "phpoffice/phpspreadsheet": "^2.2",
+        "php": "^8.1"
+    },
+    "config": {
+        "platform": {
+            "php": "8.1.0"
+        }
     }
 }
