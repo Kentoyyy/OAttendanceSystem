@@ -5,8 +5,11 @@ require 'vendor/autoload.php'; // Include Composer's autoloader
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-// Fetch users for attendance management
-$usersResult = $conn->query("SELECT id, name FROM users");
+// Check if we are viewing attendance for kids or adults
+$user_type = isset($_GET['user_type']) ? $_GET['user_type'] : 'adult';
+
+// Fetch users based on the user_type (kids or adults)
+$usersResult = $conn->query("SELECT id, name FROM users WHERE user_type = '$user_type'");
 $users = $usersResult ? $usersResult->fetch_all(MYSQLI_ASSOC) : [];
 
 // Fetch current attendance records
@@ -14,7 +17,7 @@ $date = date('Y-m-d'); // Current date
 $attendanceResult = $conn->query("SELECT users.name, attendance.status, attendance.date, attendance.time
                                   FROM attendance 
                                   JOIN users ON attendance.user_id = users.id 
-                                  WHERE attendance.date = '$date'");
+                                  WHERE attendance.date = '$date' AND users.user_type = '$user_type'");
 $attendanceRecords = $attendanceResult ? $attendanceResult->fetch_all(MYSQLI_ASSOC) : [];
 
 $conn->close();
@@ -41,7 +44,7 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
     }
 
     $writer = new Xlsx($spreadsheet);
-    $filename = 'attendance_' . date('Ymd') . '.xlsx';
+    $filename = 'attendance_' . date('Ymd') . '_'.$user_type.'.xlsx';
 
     // Send file to browser
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -184,19 +187,28 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
 </head>
 <body>
 <div class="sidebar">
-    <img src="path_to_your_logo_image/logo.png" alt="Logo">
-    <h2>Attendance System</h2>
+    <img src="images/church.png" alt="Logo">
+    <h2>GGC Church</h2>
     <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
     <a href="user_management.php"><i class="fas fa-user-plus"></i> User Management</a>
     <a href="manage_attendance.php" class="active"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
-    <a href="#"><i class="fas fa-chart-line"></i> Reports</a>
-    <a href="#"><i class="fas fa-cog"></i> Settings</a>
-
-    <a href="#"><i class="fas fa-logout"></i> Log out</a>
+   
 </div>
 
 <div class="content">
     <h1><i class="fas fa-calendar-check"></i> Manage Attendance</h1>
+    
+    <!-- Add a selection for user_type -->
+    <form method="GET" action="">
+        <div class="form-group">
+            <label for="user_type">Select User Type</label>
+            <select id="user_type" name="user_type" onchange="this.form.submit()">
+                <option value="adult" <?php echo $user_type === 'adult' ? 'selected' : ''; ?>>Adults</option>
+                <option value="kid" <?php echo $user_type === 'kid' ? 'selected' : ''; ?>>Kids</option>
+            </select>
+        </div>
+    </form>
+
     <form action="manage_attendance_process.php" method="POST">
         <div class="form-group">
             <label for="user">Select User</label>
@@ -213,7 +225,6 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
                 <option value="">--Select Status--</option>
                 <option value="present">Present</option>
                 <option value="absent">Absent</option>
-                <option value="important_plan">Important Plan</option>
             </select>
         </div>
         <div class="form-group">
@@ -221,9 +232,9 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
         </div>
     </form>
 
-    <h2>Current Attendance Records</h2>
-    <a href="?download=excel" class="download-button">Download as Excel</a>
-    
+    <h2>Current Attendance Records for <?php echo ucfirst($user_type); ?></h2>
+    <a href="?download=excel&user_type=<?php echo $user_type; ?>" class="download-button">Download as Excel</a>
+
     <table>
         <thead>
             <tr>
@@ -251,8 +262,8 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
         </tbody>
     </table>
 </div>
-
-<!-- Include Font Awesome for Icons -->
-
+<footer style="background-color: #16325B; color: white; text-align: center; padding: 10px 0; margin-left: 240px; width: calc(100% - 240px);">
+    <p>&copy; <?php echo date("Y"); ?> GGC Church. All rights reserved by: lalove ♡</p>
+</footer>
 </body>
 </html>

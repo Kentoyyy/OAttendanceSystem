@@ -7,13 +7,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $email = $_POST['email'];
     $contact = $_POST['contact'];
     $dob = $_POST['dob'];
-    $location = $_POST['location']; // New field
+    $location = $_POST['location'];
+    $user_type = $_POST['user_type']; // New field for user type (Kid or Adult)
 
-    $stmt = $conn->prepare("INSERT INTO users (name, email, contact, dob, location) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $name, $email, $contact, $dob, $location);
+    $stmt = $conn->prepare("INSERT INTO users (name, email, contact, dob, location, user_type) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $name, $email, $contact, $dob, $location, $user_type);
 
     if ($stmt->execute()) {
-        $action = "Added new user: $name";
+        $action = "Added new user: $name as $user_type";
         $logStmt = $conn->prepare("INSERT INTO activity_log (action) VALUES (?)");
         $logStmt->bind_param("s", $action);
         $logStmt->execute();
@@ -47,10 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $email = $_POST['email'];
     $contact = $_POST['contact'];
     $dob = $_POST['dob'];
-    $location = $_POST['location']; // New field
+    $location = $_POST['location'];
+    $user_type = $_POST['user_type']; // New field for user type (Kid or Adult)
 
-    $stmt = $conn->prepare("UPDATE users SET name = ?, email = ?, contact = ?, dob = ?, location = ? WHERE id = ?");
-    $stmt->bind_param("sssssi", $name, $email, $contact, $dob, $location, $id);
+    $stmt = $conn->prepare("UPDATE users SET name = ?, email = ?, contact = ?, dob = ?, location = ?, user_type = ? WHERE id = ?");
+    $stmt->bind_param("ssssssi", $name, $email, $contact, $dob, $location, $user_type, $id);
 
     if ($stmt->execute()) {
         $action = "Updated user ID: $id";
@@ -180,7 +182,8 @@ $conn->close();
             margin-bottom: 8px;
             color: #333;
         }
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 10px;
             font-size: 14px;
@@ -188,7 +191,8 @@ $conn->close();
             border-radius: 4px;
             box-sizing: border-box;
         }
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             border-color: #0D7C66;
             outline: none;
         }
@@ -209,7 +213,6 @@ $conn->close();
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            
         }
         table, th, td {
             border: 1px solid #ddd;
@@ -233,7 +236,6 @@ $conn->close();
         .actions a:hover {
             text-decoration: underline;
         }
-
         /* Modal Styles */
         .modal {
             display: none;
@@ -272,25 +274,39 @@ $conn->close();
 </head>
 <body>
     <div class="sidebar">
-        <img src="path_to_your_logo_image/logo.png" alt="Logo">
-        <h2>Attendance System</h2>
-        <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-        <a href="user_management.php" class="active"><i class="fas fa-users"></i> User Management</a>
-        <a href="manage_attendance.php"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
-        <a href="reports.php"><i class="fas fa-chart-line"></i> Reports</a>
-        <a href="#"><i class="fas fa-cog"></i> Settings</a>
-        <a href="#"><i class="fas fa-logout"></i> Log out</a>
+    <img src="images/church.png" alt="Logo">
+    <h2>GGC Church</h2>
+    <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="user_management.php" class="active"><i class="fas fa-user-plus"></i> User Management</a>
+    <a href="manage_attendance.php" ><i class="fas fa-calendar-check"></i> Manage Attendance</a>
+   
     </div>
 
     <div class="content">
         <h1>User Management</h1>
         <div class="tabs">
-            <button class="active" onclick="showTab('add')">Add User</button>
-            <button onclick="showTab('view')">View Users</button>
+            <button class="active" onclick="showTab('select-user-type')">Add User</button>
+            <button onclick="showTab('view-users')">View Users</button>
         </div>
 
-        <!-- Add User Tab -->
-        <div id="add" class="tab-content" style="display:none;">
+        <!-- Add User Step 1: Choose User Type -->
+        <div id="select-user-type" class="tab-content">
+            <h2>Select User Type</h2>
+            <form id="userTypeForm">
+                <div class="form-group">
+                    <label for="userType">User Type:</label>
+                    <select id="userType" name="userType" onchange="showFormBasedOnType()">
+                        <option value="">-- Select --</option>
+                        <option value="kid">Kid</option>
+                        <option value="adult">Adult</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Add User Form for Kid -->
+        <div id="add-kid" class="tab-content" style="display:none;">
+            <h2>Add Kid</h2>
             <form action="user_management.php" method="post">
                 <div class="form-group">
                     <label for="name">Name</label>
@@ -313,104 +329,106 @@ $conn->close();
                     <input type="text" id="location" name="location" required>
                 </div>
                 <div class="form-group">
-                    <button type="submit" name="action" value="add">Add User</button>
+                    <input type="hidden" name="user_type" value="kid">
+                    <button type="submit" name="action" value="add">Add Kid</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Add User Form for Adult -->
+        <div id="add-adult" class="tab-content" style="display:none;">
+            <h2>Add Adult</h2>
+            <form action="user_management.php" method="post">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact">Contact</label>
+                    <input type="text" id="contact" name="contact" required>
+                </div>
+                <div class="form-group">
+                    <label for="dob">Date of Birth</label>
+                    <input type="date" id="dob" name="dob" required>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" required>
+                </div>
+                <div class="form-group">
+                    <input type="hidden" name="user_type" value="adult">
+                    <button type="submit" name="action" value="add">Add Adult</button>
                 </div>
             </form>
         </div>
 
         <!-- View Users Tab -->
-        <div id="view" class="tab-content">
+        <div id="view-users" class="tab-content" style="display:none;">
+            <h2>All Users</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Contact</th>
                         <th>Date of Birth</th>
-                        <th>Location</th> <!-- New Column -->
+                        <th>Location</th>
+                        <th>User Type</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($user = $users->fetch_assoc()): ?>
-                    <tr>
-                        <td><?php echo $user['id']; ?></td>
-                        <td><?php echo $user['name']; ?></td>
-                        <td><?php echo $user['email']; ?></td>
-                        <td><?php echo $user['contact']; ?></td>
-                        <td><?php echo $user['dob']; ?></td>
-                        <td><?php echo $user['location']; ?></td> <!-- New Field -->
-                        <td class="actions">
-                            <a href="javascript:void(0)" onclick="openEditModal(<?php echo $user['id']; ?>, '<?php echo $user['name']; ?>', '<?php echo $user['email']; ?>', '<?php echo $user['contact']; ?>', '<?php echo $user['dob']; ?>', '<?php echo $user['location']; ?>')">Edit</a>
-                            <a href="?delete_id=<?php echo $user['id']; ?>" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
-                        </td>
-                    </tr>
+                    <?php while ($row = $users->fetch_assoc()) : ?>
+                        <tr>
+                            <td><?php echo $row['name']; ?></td>
+                            <td><?php echo $row['email']; ?></td>
+                            <td><?php echo $row['contact']; ?></td>
+                            <td><?php echo $row['dob']; ?></td>
+                            <td><?php echo $row['location']; ?></td>
+                            <td><?php echo ucfirst($row['user_type']); ?></td>
+                            <td class="actions">
+                                <a href="edit_user.php?id=<?php echo $row['id']; ?>">Edit</a>
+                                <a href="user_management.php?delete_id=<?php echo $row['id']; ?>">Delete</a>
+                            </td>
+                        </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
         </div>
-
-        <!-- Modal for Editing User -->
-        <div id="editModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeEditModal()">&times;</span>
-                <h2>Edit User</h2>
-                <form id="editForm" action="user_management.php" method="post">
-                    <input type="hidden" id="edit_id" name="id">
-                    <div class="form-group">
-                        <label for="edit_name">Name</label>
-                        <input type="text" id="edit_name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_email">Email</label>
-                        <input type="email" id="edit_email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_contact">Contact</label>
-                        <input type="text" id="edit_contact" name="contact" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_dob">Date of Birth</label>
-                        <input type="date" id="edit_dob" name="dob" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_location">Location</label>
-                        <input type="text" id="edit_location" name="location" required>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" name="action" value="edit">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
+    <footer style="background-color: #16325B; color: white; text-align: center; padding: 10px 0; margin-left: 240px; width: calc(100% - 240px);">
+    <p>&copy; <?php echo date("Y"); ?> GGC Church. All rights reserved by: lalove ♡</p>
+</footer>
 
     <script>
         function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.style.display = 'none';
-            });
+            var tabs = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].style.display = 'none';
+            }
             document.getElementById(tabId).style.display = 'block';
 
-            document.querySelectorAll('.tabs button').forEach(button => {
-                button.classList.remove('active');
-            });
-            document.querySelector(`.tabs button[onclick="showTab('${tabId}')"]`).classList.add('active');
+            var tabButtons = document.getElementsByClassName('tabs')[0].getElementsByTagName('button');
+            for (var i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            event.target.classList.add('active');
         }
 
-        function openEditModal(id, name, email, contact, dob, location) {
-            document.getElementById('edit_id').value = id;
-            document.getElementById('edit_name').value = name;
-            document.getElementById('edit_email').value = email;
-            document.getElementById('edit_contact').value = contact;
-            document.getElementById('edit_dob').value = dob;
-            document.getElementById('edit_location').value = location;
-            document.getElementById('editModal').style.display = 'block';
-        }
+        function showFormBasedOnType() {
+            var userType = document.getElementById('userType').value;
+            document.getElementById('add-kid').style.display = 'none';
+            document.getElementById('add-adult').style.display = 'none';
 
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
+            if (userType === 'kid') {
+                document.getElementById('add-kid').style.display = 'block';
+            } else if (userType === 'adult') {
+                document.getElementById('add-adult').style.display = 'block';
+            }
         }
     </script>
 </body>

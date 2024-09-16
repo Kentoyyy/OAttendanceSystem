@@ -20,13 +20,36 @@ if ($attendanceResult) {
     $total_attendance = 0; // Default value in case of error
 }
 
-// Query to group attendance by date and count total entries per day
-$attendanceSummaryResult = $conn->query("
-    SELECT date AS attendance_date, COUNT(*) AS entries 
+// Query to count attendance entries for kids and adults using `user_type`
+$attendanceKidsResult = $conn->query("SELECT 
+    SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) AS present_kids,
+    SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) AS absent_kids
     FROM attendance 
-    GROUP BY date 
-    ORDER BY attendance_date DESC
+    JOIN users ON attendance.user_id = users.id 
+    WHERE users.user_type = 'kid'
 ");
+
+$attendanceAdultsResult = $conn->query("SELECT 
+    SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) AS present_adults,
+    SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) AS absent_adults
+    FROM attendance 
+    JOIN users ON attendance.user_id = users.id 
+    WHERE users.user_type = 'adult'
+");
+
+if ($attendanceKidsResult && $attendanceAdultsResult) {
+    $kidsRow = $attendanceKidsResult->fetch_assoc();
+    $adultsRow = $attendanceAdultsResult->fetch_assoc();
+    $present_kids = $kidsRow['present_kids'];
+    $absent_kids = $kidsRow['absent_kids'];
+    $present_adults = $adultsRow['present_adults'];
+    $absent_adults = $adultsRow['absent_adults'];
+} else {
+    $present_kids = $absent_kids = $present_adults = $absent_adults = 0;
+}
+
+// Query to group attendance by date and count total entries per day
+$attendanceSummaryResult = $conn->query("SELECT date AS attendance_date, COUNT(*) AS entries FROM attendance GROUP BY date ORDER BY attendance_date DESC");
 $attendanceSummary = $attendanceSummaryResult ? $attendanceSummaryResult->fetch_all(MYSQLI_ASSOC) : [];
 
 // Query to get recent activities
@@ -112,26 +135,26 @@ $conn->close();
             margin-bottom: 20px;
         }
         .stats {
-            display: flex;
-            gap: 20px;
+            margin-bottom: 20px;
         }
-        .card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            text-align: center;
+        .stats table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .card h3 {
-            margin: 0;
-            font-size: 36px;
-            color: #55679C;
+        .stats th, .stats td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
         }
-        .card p {
-            margin: 5px 0 0;
-            font-size: 14px;
-            color: #777;
+        .stats th {
+            background-color: #55679C;
+            color: white;
+        }
+        .stats tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .stats tbody tr:hover {
+            background-color: #e9ecef;
         }
         .recent-activities {
             margin-top: 20px;
@@ -146,62 +169,80 @@ $conn->close();
             text-align: left;
         }
         .recent-activities th {
+            background-color: #55679C;
+            color: white;
+        }
+        
+        .attendance-summary h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .summary-table thead {
+            background-color: #55679C;
+            color: white;
+        }
+        .summary-table th, .summary-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .summary-table tbody tr:nth-child(even) {
             background-color: #f8f9fa;
         }
-        /* Attendance Summary Styles */
-.attendance-summary h2 {
-    font-size: 20px;
-    color: #333;
-    margin-bottom: 15px;
-}
+        .summary-table td {
+            font-size: 16px;
+            color: #333;
+        }
+        .summary-table th {
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+        .summary-table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        .total-users-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
 
-.summary-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
+        .total-users-card h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
 
-.summary-table thead {
-    background-color: #55679C;
-    color: white;
-}
+        .total-users-card p {
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
 
-.summary-table th, .summary-table td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-.summary-table tbody tr:nth-child(even) {
-    background-color: #f8f9fa;
-}
-
-.summary-table td {
-    font-size: 16px;
-    color: #333;
-}
-
-.summary-table th {
-    font-size: 16px;
-    text-transform: uppercase;
-}
-
-.summary-table tbody tr:hover {
-    background-color: #e9ecef;
-}
+        .total-users-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-5px);
+        }
     </style>
 </head>
 <body>
 
-   <div class="sidebar">
-        <img src="images/logoattendance.png" alt="Logo">
-        <h2>Attendance System</h2>
+    <div class="sidebar">
+        <img src="images/church.png" alt="Logo">
+        <h2>GGC Church</h2>
         <a href="dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
         <a href="user_management.php"><i class="fas fa-user-plus"></i> User Management</a>
         <a href="manage_attendance.php"><i class="fas fa-calendar-check"></i> Manage Attendance</a>
-        <a href="#"><i class="fas fa-chart-line"></i> Reports</a>
-        <a href="#"><i class="fas fa-cog"></i> Settings</a>
-        <a href="#"><i class="fas fa-sign-out-alt"></i> Log out</a>
+       
     </div>
 
     <div class="content">
@@ -210,19 +251,42 @@ $conn->close();
 
         <!-- Statistics Section -->
         <div class="stats">
-            <div class="card">
-                <h3 id="userCount"><?php echo $total_users; ?></h3>
-                <p>Total Users</p>
-            </div>
-            <div class="card">
-                <h3 id="attendanceCount"><?php echo $total_attendance; ?></h3>
-                <p>Total Attendance Entries</p>
-            </div>
+            <h2>Attendance Statistics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Kids</td>
+                        <td><?php echo $present_kids; ?></td>
+                        <td><?php echo $absent_kids; ?></td>
+                        <td><?php echo $present_kids + $absent_kids; ?></td>
+                    </tr>
+                    <tr>
+                        <td>Adults</td>
+                        <td><?php echo $present_adults; ?></td>
+                        <td><?php echo $absent_adults; ?></td>
+                        <td><?php echo $present_adults + $absent_adults; ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td><?php echo $present_kids + $present_adults; ?></td>
+                        <td><?php echo $absent_kids + $absent_adults; ?></td>
+                        <td><?php echo $present_kids + $absent_kids + $present_adults + $absent_adults; ?></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- Recent Activity Section -->
         <div class="recent-activities">
-            <h2>Recent Activity</h2>
+            <h2>Recent Activities</h2>
             <table>
                 <thead>
                     <tr>
@@ -231,53 +295,46 @@ $conn->close();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($recentActivities)): ?>
-                        <tr>
-                            <td colspan="2">No recent activities.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($recentActivities as $activity): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($activity['action']); ?></td>
-                                <td><?php echo htmlspecialchars(date('Y-m-d H:i:s', strtotime($activity['timestamp']))); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <?php foreach ($recentActivities as $activity) : ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($activity['action']); ?></td>
+                        <td><?php echo htmlspecialchars($activity['timestamp']); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
 
+        <!-- Attendance Summary Section -->
         <div class="attendance-summary">
-    <h2>Attendance Summary by Day</h2>
-    <table class="summary-table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Total Attendance Entries</th>
-            </tr>
-        </thead>
-        <tbody>
-    <?php if (empty($attendanceSummary)): ?>
-        <tr>
-            <td colspan="2">No attendance entries.</td>
-        </tr>
-    <?php else: ?>
-        <?php foreach ($attendanceSummary as $summary): ?>
-            <?php
-                // Check if the attendance_date is valid before formatting
-                $attendanceDate = strtotime($summary['attendance_date']);
-                $formattedDate = $attendanceDate ? date('F j, Y', $attendanceDate) : 'Invalid Date';
-            ?>
-            <tr>
-                <td><?php echo htmlspecialchars($formattedDate); ?></td>
-                <td><?php echo htmlspecialchars($summary['entries']); ?></td>
-            </tr>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</tbody>
-    </table>
-</div>
+            <h2>Attendance Summary</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Total Entries</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($attendanceSummary as $summary) : ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($summary['attendance_date']); ?></td>
+                        <td><?php echo htmlspecialchars($summary['entries']); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
+        <!-- Total Users Section -->
+        <div class="total-users-card">
+        <h2>Total Users</h2>
+        <p><?php echo $total_users; ?></p>
     </div>
+    </div>
+    <footer style="background-color: #16325B; color: white; text-align: center; padding: 10px 0; margin-left: 240px; width: calc(100% - 240px);">
+    <p>&copy; <?php echo date("Y"); ?> GGC Church. All rights reserved by: lalove ♡</p>
+</footer>
+
 </body>
 </html>
