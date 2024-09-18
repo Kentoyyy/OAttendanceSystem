@@ -1,0 +1,11 @@
+HEHEHE MWAHH I LOVEE YOUUU - KENDIII <3 <3
+
+Sundin mo are love 
+
+1: Punta google at idownload ang xampp ito ang link https://www.apachefriends.org/download.html
+tapos irun ang xampp pindotin ang start button ng Apache at MySQL
+2: Idownload yung zip at e extract 
+3: icopy yung folder na na extract sa xampp/htdocs at ipaste dito ang folder
+4: mag open ng google at ilagay ang url na ito http://localhost/phpmyadmin
+5: Click New pindotin ang Import at e import ang system_attendancedb.sql
+6: after ma import ang database

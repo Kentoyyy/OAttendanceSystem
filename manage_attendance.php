@@ -58,8 +58,9 @@ if (isset($_GET['download']) && $_GET['download'] === 'excel') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Attendance</title>
+    <title>GGC | Manage Attendance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
